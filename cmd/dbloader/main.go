@@ -80,7 +80,9 @@ func main() {
 	scanner.Buffer(buf, 512*1024*1024)
 	for scanner.Scan() {
 		scanner.Bytes()
-		var traces model.Spans
+		var traces struct{
+			Spans []model.Spans `json:"spans"`
+		}
 		if err := json.Unmarshal(scanner.Bytes(), &traces); err != nil {
 			fmt.Printf("skipping line %d: %s\n", i, err)
 			continue

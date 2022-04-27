@@ -136,4 +136,6 @@ func main() {
 		}
 		msg++
 	}
+
+	fmt.Println(scanner.Err())
 }
