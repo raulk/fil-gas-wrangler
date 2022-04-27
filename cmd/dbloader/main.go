@@ -9,32 +9,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
-)
 
-type (
-	Context struct {
-		CodeCID   string `json:"code_cid,omitempty" db:"code_cid"`
-		MethodNum uint8  `json:"method_num,omitempty" db:"method_num"`
-	}
-	Point struct {
-		Event string `json:"event,omitempty"`
-		Label string `json:"label,omitempty"`
-	}
-	Consumption struct {
-		FuelConsumed *uint64 `json:"fuel_consumed,omitempty"`
-		GasConsumed  *uint64 `json:"gas_consumed,omitempty"`
-	}
-	Timing struct {
-		ElapsedCumNs uint64 `json:"elapsed_cum_ns,omitempty"`
-		ElapsedRelNs uint64 `json:"elapsed_rel_ns,omitempty"`
-	}
-	Trace struct {
-		Context     Context     `json:"context"`
-		Point       Point       `json:"point"`
-		Consumption Consumption `json:"consumption"`
-		Timing      Timing      `json:"timing"`
-	}
-	Traces []Trace
+	"github.com/raulk/fil-gas-wrangler/pkg/model"
 )
 
 func main() {
@@ -43,8 +19,6 @@ func main() {
 		pathOrig = flag.Arg(0)
 		pathDb   = flag.Arg(1)
 	)
-
-	// {"context":{"code_cid":"baeaaaaa","method_num":0},"point":{"event":"Started","label":""},"consumption":{"fuel_consumed":null,"gas_consumed":null},"timing":{"elapsed_cum_ns":60,"elapsed_rel_ns":60}}
 
 	db, err := sqlx.Open("sqlite3", pathDb+"?cache=shared&mode=rwc&_journal_mode=WAL")
 	if err != nil {
@@ -103,10 +77,10 @@ func main() {
 
 	var i uint
 	buf := make([]byte, 64*1024)
-	scanner.Buffer(buf, 512 * 1024 * 1024)
+	scanner.Buffer(buf, 512*1024*1024)
 	for scanner.Scan() {
 		scanner.Bytes()
-		var traces Traces
+		var traces model.Spans
 		if err := json.Unmarshal(scanner.Bytes(), &traces); err != nil {
 			fmt.Printf("skipping line %d: %s\n", i, err)
 			continue
@@ -175,12 +149,12 @@ func main() {
 
 }
 
-func loadContexts(db *sqlx.DB) map[Context]uint {
-	ret := map[Context]uint{}
+func loadContexts(db *sqlx.DB) map[model.Context]uint {
+	ret := map[model.Context]uint{}
 
 	type context struct {
 		Id uint
-		Context
+		model.Context
 	}
 
 	var contexts []context
@@ -194,12 +168,12 @@ func loadContexts(db *sqlx.DB) map[Context]uint {
 	return ret
 }
 
-func loadPoints(db *sqlx.DB) map[Point]uint {
-	ret := map[Point]uint{}
+func loadPoints(db *sqlx.DB) map[model.Point]uint {
+	ret := map[model.Point]uint{}
 
 	type point struct {
 		Id uint
-		Point
+		model.Point
 	}
 
 	var points []point
