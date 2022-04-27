@@ -3,10 +3,10 @@ package model
 type Spans []Span
 
 type Span struct {
-	Context     Context     `json:"context"`
-	Point       Point       `json:"point"`
-	Consumption Consumption `json:"consumption"`
-	Timing      Timing      `json:"timing"`
+	Context
+	Point
+	Consumption
+	Timing
 }
 
 type Context struct {
